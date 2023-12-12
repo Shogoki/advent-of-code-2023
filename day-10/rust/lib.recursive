@@ -1,0 +1,97 @@
+use std::collections::BTreeMap;
+
+#[derive(Debug)]
+enum Direction {
+    North,
+    West,
+    South,
+    East,
+}
+use Direction::*;
+
+pub fn process_part1(input: &str) -> String {
+    let map = input
+        .lines()
+        .enumerate()
+        .flat_map(|(y, line)| {
+            line.chars()
+                .enumerate()
+                .map(move |(x, character)| ((y as i32, x as i32), character))
+        })
+        .collect::<BTreeMap<(i32, i32), char>>();
+    let start_pos = map
+        .iter()
+        .find_map(|(pos, char)| match char {
+            'S' => Some(*pos as (i32, i32)),
+            _ => None,
+        })
+        .unwrap();
+    dbg!(&map);
+    dbg!(start_pos);
+
+    let ways = vec![((start_pos.0 +1, start_pos.1),North),((start_pos.0 -1, start_pos.1),South),((start_pos.0 , start_pos.1 +1),West),((start_pos.0 , start_pos.1 -1),East)]; 
+
+    let mut res = ways.iter().map(|(pos, dir)| std::iter::successors(Some((*pos, dir)), |(start, from)| {
+        println!("Start at position {},{}", start.0, start.1);
+        let current = *(map.get(&start)?);
+        println!("after match");
+
+
+
+        let way_to_go = match (current, from) {
+            ('|', North) => South,
+            ('|', South) => North,
+            ('-', West) => East,
+            ('-', East) => West,
+            ('L', North) => East,
+            ('L', East) => North,
+            ('J', North) => West,
+            ('J', West) => North,
+            ('7', West) => South,
+            ('7', South) => West,
+            ('F', South) => East,
+            ('F', East) => South,
+            _ => unreachable!("should not happen"),
+        };
+        match way_to_go {
+            North => Some(((start.0 -1, start.1), &South)),
+            East=> Some(((start.0 , start.1 +1), &West)),
+            South => Some(((start.0 +1, start.1),&North)),
+            West => Some(((start.0 , start.1 -1), &East)),
+        }
+
+    }));
+    let test = res.next().unwrap();
+    dbg!(test);
+    todo!();
+}
+
+
+pub fn process_part2(input: &str) -> String {
+    todo!()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const INPUT: &str = "7-F7-
+.FJ|7
+SJLL7
+|F--J
+LJ.LJ";
+    const INPUT2: &str = INPUT;
+
+    #[test]
+    fn it_works() {
+        let result = process_part1(INPUT);
+        assert_eq!(result, "8");
+    }
+
+    #[test]
+    #[ignore = "part1"]
+    fn part2_works() {
+        let result = process_part2(INPUT2);
+        assert_eq!(result, "2");
+    }
+}
