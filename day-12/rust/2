@@ -1,7 +1,4 @@
-use std::{
-    collections::{BTreeMap, HashSet},
-    ops::Range,
-};
+use std::{collections::BTreeMap, ops::Range};
 
 use nom::{
     bytes::complete::tag,
@@ -26,21 +23,23 @@ enum MapType {
 struct SeedMap<'a> {
     from: &'a str,
     to: &'a str,
-    dst: Vec<Range<u64>>,
-    src: Vec<Range<u64>>,
+    dst: Vec<Range<u32>>,
+    src: Vec<Range<u32>>,
 }
 impl SeedMap<'_> {
-    fn get_dst(&self, from: u64) -> u64 {
-        let gap: i64 = match self
+    fn get_dst(&self, from: u32) -> u32 {
+        let gap: i32 = match self
             .src
             .iter()
             .enumerate()
             .find(|(_, r)| r.start <= from && from < r.end)
         {
-            Some((idx, r)) => (self.dst[idx].start as i64) - (r.start as i64),
-            None => 0 as i64,
+            Some((idx, r)) => self.dst[idx].start as i32 - r.start as i32,
+            None => 0 as i32,
         };
-        return (from as i64 + gap) as u64;
+        println!("{from});
+        println!("{gap}");
+        return (from as i32 + gap) as u32;
     }
 }
 
@@ -51,9 +50,9 @@ fn parse_map(input: &str) -> IResult<&str, SeedMap> {
     let (input, mapdefs) = separated_list1(
         newline,
         tuple((
-            complete::u64,
-            preceded(space1, complete::u64),
-            preceded(space1, complete::u64),
+            complete::u32,
+            preceded(space1, complete::u32),
+            preceded(space1, complete::u32),
         )),
     )(input)?;
     println!("Got Definitions");
@@ -87,7 +86,7 @@ pub fn process_part1(input: &str) -> String {
         .map(|s| {
             println!("Processing Seed: {}", s);
             let mut current_from = "seed";
-            let mut id = *s as u64;
+            let mut id = *s;
             while current_from != TARGET {
                 println!("Currently at {current_from}");
                 let map = maps.iter().find(|m| m.from == current_from).unwrap();
@@ -101,46 +100,8 @@ pub fn process_part1(input: &str) -> String {
     result.to_string()
 }
 
-fn parse_almanac2(input: &str) -> IResult<&str, (Vec<u32>, Vec<SeedMap>)> {
-    let (input, seeds_params) = terminated(
-        preceded(
-            tag("seeds: "),
-            separated_list1(space1, separated_pair(complete::u32, space1, complete::u32)),
-        ),
-        tag("\n\n"),
-    )(input)?;
-    let seed =
-        seeds_params
-            .iter()
-            .map(|&(start, len)| start..(start + len))
-            .flatten()
-            .collect();
-    println!("parsed SEEDS");
-    let (input, maps) = separated_list1(preceded(newline, newline), parse_map)(input)?;
-    Ok((input, (seed, maps)))
-}
-
 pub fn process_part2(input: &str) -> String {
-    println!("Start");
-    let (_, (seeds, maps)) = parse_almanac2(input).unwrap();
-    println!("FINISHED PARSING");
-    const TARGET: &str = "location";
-    let result = seeds
-        .iter()
-        .map(|s| {
-            println!("Processing Seed: {}", s);
-            let mut current_from = "seed";
-            let mut id = *s as u64;
-            while current_from != TARGET {
-                let map = maps.iter().find(|m| m.from == current_from).unwrap();
-                id = map.get_dst(id);
-                current_from = map.to;
-            }
-            id
-        })
-        .min()
-        .unwrap();
-    result.to_string()
+    todo!()
 }
 
 #[cfg(test)]
@@ -189,9 +150,9 @@ humidity-to-location map:
     }
 
     #[test]
-    //#[ignore = "part1"]
+    #[ignore = "part1"]
     fn part2_works() {
         let result = process_part2(INPUT2);
-        assert_eq!(result, "46");
+        assert_eq!(result, "30");
     }
 }
